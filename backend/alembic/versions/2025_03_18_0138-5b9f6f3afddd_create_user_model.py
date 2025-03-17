@@ -1,8 +1,8 @@
-"""create ai provider model
+"""create user model
 
-Revision ID: d7aebf41ceb6
-Revises:
-Create Date: 2025-03-17 23:41:09.531320
+Revision ID: 5b9f6f3afddd
+Revises: d7aebf41ceb6
+Create Date: 2025-03-18 01:38:53.896336
 
 """
 
@@ -12,9 +12,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-# revision identifiers, used by Alembic.
-revision: str = "d7aebf41ceb6"
-down_revision: Union[str, None] = None
+revision: str = "5b9f6f3afddd"
+down_revision: Union[str, None] = "d7aebf41ceb6"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -22,12 +21,9 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Upgrade schema."""
     op.create_table(
-        "ai_providers",
-        sa.Column("name", sa.String(), nullable=False),
-        sa.Column("api_url", sa.String(), nullable=False),
-        sa.Column("api_key", sa.String(), nullable=False),
-        sa.Column("model", sa.String(), nullable=False),
-        sa.Column("priority", sa.Integer(), nullable=False),
+        "users",
+        sa.Column("chat_id", sa.BigInteger(), nullable=True),
+        sa.Column("username", sa.String(), nullable=True),
         sa.Column(
             "id",
             sa.UUID(),
@@ -48,10 +44,14 @@ def upgrade() -> None:
             onupdate=sa.text("now()"),
             nullable=False,
         ),
-        sa.PrimaryKeyConstraint("id", name=op.f("pk_ai_providers")),
+        sa.PrimaryKeyConstraint("id", name=op.f("pk_users")),
+    )
+    op.create_index(
+        op.f("ix_users_chat_id"), "users", ["chat_id"], unique=True
     )
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_table("ai_providers")
+    op.drop_index(op.f("ix_users_chat_id"), table_name="users")
+    op.drop_table("users")

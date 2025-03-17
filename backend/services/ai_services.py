@@ -7,6 +7,8 @@ import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from fastapi import HTTPException, status
+
 from core import log
 from core.models import (
     AIProvider,
@@ -17,6 +19,7 @@ from core.models import (
 # TODO: Can move to schemas but that's makes no sense for me
 @dataclass
 class Response:
+    status_code: int
     content: str
     ai_model: str | None
     request_content: str
@@ -91,37 +94,46 @@ async def get_ai_response(
         )
         model = model.scalars().first()
         if not model:
-            return Response(
-                content="Specified AI model not found.",
-                ai_model=None,
-                request_content=message,
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Specified AI model not found.",
             )
 
         response = await query_ai_provider(model, message)
         if response:
             return Response(
-                request_content=message, content=response, ai_model=model.name
+                status_code=200,
+                request_content=message,
+                content=response,
+                ai_model=model.name,
             )
-        return Response(
-            content="No response from specified AI model.",
-            ai_model=None,
-            request_content=message,
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="No successful response from specified AI model.",
         )
 
     models_query = AIProvider.active().order_by(AIProvider.priority)
     result = await db.execute(models_query)
     ai_models = result.scalars().all()
 
+    if not ai_models:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No active AI models found.",
+        )
+
     for model in ai_models:
         log.info(f"Trying AI model: {model.name}")
         response = await query_ai_provider(model, message)
         if response:
             return Response(
-                request_content=message, content=response, ai_model=model.name
+                status_code=200,
+                request_content=message,
+                content=response,
+                ai_model=model.name,
             )
 
-    return Response(
-        content="No successful response from any AI models.",
-        ai_model=None,
-        request_content=message,
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="No successful response from any AI models.",
     )

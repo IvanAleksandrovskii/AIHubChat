@@ -1,6 +1,6 @@
 # services/user_service.py
 
-from sqlalchemy import select, update
+from sqlalchemy import select  # , update (using just a simple commit for now)
 
 # from async_lru import alru_cache
 
@@ -9,10 +9,7 @@ from core.models import User, db_helper
 
 
 # TODO: Implement caching for user service and others
-
-
 class UserService:
-
     @staticmethod
     async def create_user(chat_id: int, username: str | None) -> User:
         async with db_helper.db_session() as session:
@@ -58,18 +55,6 @@ class UserService:
                 log.exception(f"Error in get_all_users: {e}")
 
     @staticmethod
-    async def is_superuser(chat_id: int) -> bool:
-        async with db_helper.db_session() as session:
-            try:
-                result = await session.execute(
-                    select(User).where(User.chat_id == chat_id)
-                )
-                user = result.scalar_one_or_none()
-                return user is not None and user.is_superuser
-            except Exception as e:
-                log.exception(f"Error in is_superuser: {e}")
-
-    @staticmethod
     async def update_username(chat_id: int, new_username: str | None) -> bool:
         async with db_helper.db_session() as session:
             try:
@@ -84,11 +69,7 @@ class UserService:
                         "Updated username for user %s to %s", chat_id, new_username
                     )
 
-                    # Clear cache for updated user
-                    # UserService.get_user.cache_clear()
-                    # UserService.create_user.cache_clear()
-
-                    return True
+                    # TODO: clear cache for updated user
 
                 else:
                     log.warning(f"User {chat_id} not found for username update")
@@ -98,28 +79,18 @@ class UserService:
                 await session.rollback()
                 return False
 
+    """
+    Example if is_superuser is implemented to the User model
+    
     @staticmethod
-    async def mark_user_as_not_new(chat_id: int) -> bool:
+    async def is_superuser(chat_id: int) -> bool:
         async with db_helper.db_session() as session:
             try:
                 result = await session.execute(
-                    update(User)
-                    .where(User.chat_id == chat_id)
-                    .values(is_new_user=False)
+                    select(User).where(User.chat_id == chat_id)
                 )
-                await session.commit()
-                if result.rowcount > 0:
-                    log.info(f"Marked user {chat_id} as not new")
-
-                    # Clear cache for updated user
-                    # UserService.get_user.cache_clear()
-
-                    return True
-
-                else:
-                    log.warning(f"User {chat_id} not found for marking as not new")
-                    return False
+                user = result.scalar_one_or_none()
+                return user is not None and user.is_superuser
             except Exception as e:
-                log.exception(f"Error in mark_user_as_not_new: {e}")
-                await session.rollback()
-                return False
+                log.exception(f"Error in is_superuser: {e}")
+    """

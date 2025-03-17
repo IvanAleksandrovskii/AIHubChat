@@ -20,7 +20,7 @@ from core.admin import async_sqladmin_db_helper, sqladmin_authentication_backend
 from core.admin.models import setup_admin
 from core.models import client_manager
 
-# from api import router as api_router
+from api import router as api_router
 
 
 @asynccontextmanager
@@ -46,7 +46,7 @@ main_app = FastAPI(
 )
 
 
-# main_app.include_router(api_router)
+main_app.include_router(api_router)
 
 
 # Mount media storage
