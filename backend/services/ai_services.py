@@ -3,6 +3,7 @@
 from typing import Optional
 from dataclasses import dataclass
 import httpx
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -26,7 +27,7 @@ class Response:
 
 
 async def query_ai_provider(model: AIProvider, message: str) -> Optional[str]:
-    retries = 2
+    retries = 2 # TODO: Move to config
     try:
         uber_client = await client_manager.get_client()
     except Exception as e:
@@ -86,11 +87,11 @@ async def query_ai_provider(model: AIProvider, message: str) -> Optional[str]:
 
 
 async def get_ai_response(
-    db: AsyncSession, message: str, specific_model: Optional[str] = None
+    db: AsyncSession, message: str, specific_model: Optional[UUID] = None
 ) -> Response:
     if specific_model:
         model = await db.execute(
-            select(AIProvider).where(AIProvider.name == specific_model)
+            select(AIProvider).where(AIProvider.id == specific_model)
         )
         model = model.scalars().first()
         if not model:
