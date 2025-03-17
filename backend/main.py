@@ -104,8 +104,7 @@ logging.getLogger("uvicorn.access").addFilter(NoFaviconFilter())
 # CORS
 main_app.add_middleware(
     CORSMiddleware,
-    # allow_origins=settings.cors.allowed_origins, # TODO: Enable this
-    allow_origins=["*"],
+    allow_origins=settings.cors.allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
