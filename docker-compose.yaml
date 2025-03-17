@@ -1,0 +1,25 @@
+services:
+
+  pg-bot-tap-quiz:
+    # * rename as needed, put the right adress to the web service down below
+    image: postgres:16.3
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-AIHub} # *
+      POSTGRES_USER: ${POSTGRES_USER:-postgres} # *
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password} # *
+    ports:
+      - "5432:5432"
+    networks:
+      - inner_ai_hub
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+networks:
+  inner_ai_hub:
+    external: false
+    driver: bridge
+
+volumes:
+  pg_data:
+  media:
+
