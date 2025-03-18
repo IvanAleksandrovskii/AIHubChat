@@ -1,0 +1,2 @@
+// components/TelegramAuth.jsx
+

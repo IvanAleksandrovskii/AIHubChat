@@ -44,7 +44,7 @@ function App() {
                     messagesEndRef={messagesEndRef}
                     isLimitExceeded={isLimitExceeded}
                     availableModels={availableModels}
-                    error={error}
+                    isLoading={isLoading}
                 />
 
                 <MessageInput
