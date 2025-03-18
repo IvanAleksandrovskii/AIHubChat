@@ -9,17 +9,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.models import (
     db_helper,
     AIProvider,
+    User,
 )
 from core.schemas import Message
 from core.schemas.ai_provider import AIProviderResponse
 from services.ai_services import Response
-
-# from api.dependencies import tg_dep
-
 from services import (
     Response,
     get_ai_response,
 )
+
+from api.dependencies import tg_dep
+
 
 router = APIRouter()
 
@@ -29,6 +30,7 @@ async def process_message(
     message: Message,
     ai_model_id: Optional[UUID] = None,
     db: AsyncSession = Depends(db_helper.session_getter),
+    user: User = Depends(tg_dep),
 ) -> Response:
     """Process a message and return an AI-generated response."""
     try:
@@ -43,6 +45,7 @@ async def process_message(
 @router.get("/models/", response_model=List[AIProviderResponse])
 async def get_all_ai_models(
     db: AsyncSession = Depends(db_helper.session_getter),
+    user: User = Depends(tg_dep),
 ) -> List[AIProviderResponse]:
     """List all available AI models."""
     try:

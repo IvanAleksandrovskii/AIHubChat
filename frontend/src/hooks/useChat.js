@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { fetchModels, sendMessage } from '../services/api';
 
-export function useChat() {
+export function useChat(tgInitData) {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -14,8 +14,10 @@ export function useChat() {
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
-        loadModels();
-    }, []);
+        if (tgInitData) {
+            loadModels();
+        }
+    }, [tgInitData]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -24,7 +26,7 @@ export function useChat() {
     const loadModels = async () => {
         try {
             setError(null);
-            const models = await fetchModels();
+            const models = await fetchModels(tgInitData);
             if (models?.length > 0) {
                 setAvailableModels(models);
                 setSelectedModel(models[0].id);
@@ -48,46 +50,37 @@ export function useChat() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!input.trim()) return;
-
         const userMessage = {
             role: 'user',
             content: input,
             timestamp: new Date().toISOString()
         };
-
-        // Добавляем новое сообщение в историю без обрезки
+        // Add the new message to the history without truncation
         let updatedMessages = [...messages, userMessage];
         setMessages(updatedMessages);
         setInput('');
         setIsLoading(true);
         setError(null);
-
-        // Готовим контекст сообщений (последние 10 сообщений, не более 10000 символов)
+        // Prepare the context of the messages (the last 10 messages, not more than 10,000 characters)
         let recentMessages = updatedMessages.slice(-10);
         let totalLength = recentMessages.reduce((sum, msg) => sum + msg.content.length, 0);
         while (totalLength > 10000 && recentMessages.length > 1) {
             recentMessages.shift();
             totalLength = recentMessages.reduce((sum, msg) => sum + msg.content.length, 0);
         }
-
         setIsLimitExceeded(totalLength > 10000);
-
         try {
             console.log("Recent Messages sent to backend:", recentMessages);
-
-            // Приводим recentMessages в строку JSON и отправляем на сервер
-            const response = await sendMessage(JSON.stringify(recentMessages), selectedModel);
-
+            // Consert recentMessages into a JSON string and send it to the server
+            const response = await sendMessage(JSON.stringify(recentMessages), selectedModel, tgInitData);
             const assistantMessage = {
                 role: 'assistant',
                 content: response.content,
                 timestamp: new Date().toISOString(),
                 model: response.ai_model
             };
-
-            // Добавляем ответ модели в историю
+            // Add the model message to the history
             setMessages(prev => [...prev, assistantMessage]);
-
         } catch (err) {
             console.error('Error sending message:', err);
             setError(`Failed to send message: ${err.message || 'Unknown error'}`);
@@ -111,4 +104,3 @@ export function useChat() {
         setError
     };
 }
-

@@ -9,6 +9,7 @@ from init_data_py import InitData
 
 from core import settings
 from core.models import User
+from services import UserService
 
 
 log = logging.getLogger("TG Auth Dependency")
@@ -38,17 +39,7 @@ class TelegramInitDependency:
         ),
     ) -> User:
         """
-        Extract and validate Telegram init data from the request.
-
-        Args:
-            request: FastAPI request object
-            telegram_web_app_data: Init data from Telegram Web App header
-
-        Returns:
-            User: Extracted user information
-
-        Raises:
-            HTTPException: If validation fails or required data is missing
+        Validate Telegram init data from the request.
         """
         # Check header presence
         if not telegram_web_app_data:
@@ -82,13 +73,19 @@ class TelegramInitDependency:
                     detail="User information missing in init data",
                 )
 
-            # Create user object with extracted data
-            user = User(
-                # Can add more fields here if needed like first_name, last_name, etc.
-                username=getattr(init_data.user, "username", None),
-                chat_id=init_data.chat_instance,
-            )
+            # Extract user information
+            if not init_data.user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="User information missing in init data",
+                )
 
+            # Create user object with extracted data
+            chat_id = init_data.user.id
+            username = init_data.user.username
+
+            user = await UserService.create_user(chat_id, username)
+            # TODO: Make a schema
             return user
 
         except Exception as e:

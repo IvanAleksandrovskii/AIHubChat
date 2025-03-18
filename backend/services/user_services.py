@@ -24,7 +24,7 @@ class UserService:
                     log.info("User %s already exists", chat_id)
                     return existing_user
 
-                user = User(chat_id=chat_id, username=username, is_superuser=False)
+                user = User(chat_id=chat_id, username=username)
                 session.add(user)
                 await session.commit()
                 await session.refresh(user)

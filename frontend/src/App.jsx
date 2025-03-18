@@ -1,12 +1,44 @@
-import React from 'react';
+// src/App.jsx
+
+import React, { useEffect, useState } from 'react';
 import Header from './components/Header/Header';
 import MessageList from './components/MessageList/MessageList';
 import MessageInput from './components/MessageInput/MessageInput';
 import ErrorBanner from './components/ErrorBanner/ErrorBanner';
+import TelegramWarning from './components/TelegramWarning/TelegramWarning';
 import { useChat } from './hooks/useChat';
 import './App.css';
 
+
 function App() {
+    const [isTelegramApp, setIsTelegramApp] = useState(false);
+    const [tgInitData, setTgInitData] = useState(null);
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    // Initialize Telegram WebApp
+    useEffect(() => {
+        try {
+            const tg = window?.Telegram?.WebApp;
+
+            if (tg) {
+                tg.ready();
+                setIsTelegramApp(true);
+                setTgInitData(tg.initData);
+
+                // Can also add theme detection similar to your example
+                // const isDarkMode = tg.colorScheme === 'dark';
+            } else {
+                console.warn("Telegram Web App not detected.");
+                setIsTelegramApp(false);
+            }
+        } catch (error) {
+            console.error("Error initializing Telegram WebApp:", error);
+            setIsTelegramApp(false);
+        } finally {
+            setIsInitialized(true);
+        }
+    }, []);
+
     const {
         messages,
         input,
@@ -20,7 +52,16 @@ function App() {
         handleModelChange,
         handleSubmit,
         setError
-    } = useChat();
+    } = useChat(tgInitData);
+
+    if (!isInitialized) {
+        return <div className="loading">Initializing...</div>;
+    }
+
+    // Display a warning if not running inside Telegram
+    if (!isTelegramApp) {
+        return <TelegramWarning />;
+    }
 
     return (
         <div className="app-container">
@@ -30,14 +71,12 @@ function App() {
                 handleModelChange={handleModelChange}
                 isLoading={isLoading}
             />
-
             {error && (
                 <ErrorBanner
                     error={error}
                     onClose={() => setError(null)}
                 />
             )}
-
             <main className="chat-container">
                 <MessageList
                     messages={messages}
@@ -46,7 +85,6 @@ function App() {
                     availableModels={availableModels}
                     isLoading={isLoading}
                 />
-
                 <MessageInput
                     input={input}
                     handleInputChange={handleInputChange}
@@ -54,7 +92,6 @@ function App() {
                     isLoading={isLoading}
                     selectedModel={selectedModel}
                 />
-
                 <div className="history-info">
                     <p>Keeping last 10 messages in memory. Maximum request size: 10,000 characters.</p>
                 </div>
