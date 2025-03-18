@@ -10,6 +10,8 @@ from core import log, settings
 
 
 class CustomFileSystemStorage(FileSystemStorage):
+    """ Pretty fast database based media storage, works well with SQLAdmin and Starlette """
+    
     def __init__(self, root_path: str, allowed_extensions: Optional[List[str]] = None):
         self.root_path = root_path
         self.allowed_extensions = allowed_extensions or []
@@ -40,22 +42,19 @@ class CustomFileSystemStorage(FileSystemStorage):
         if os.path.exists(full_path):
             os.remove(full_path)
 
-    def _check_extension(self, filename: str) -> bool:
-        if not self.allowed_extensions:
-            return True
-        return any(filename.lower().endswith(ext.lower()) for ext in self.allowed_extensions)
+    # def _check_extension(self, filename: str) -> bool:
+    #     if not self.allowed_extensions:
+    #         return True
+    #     return any(filename.lower().endswith(ext.lower()) for ext in self.allowed_extensions)
 
 
 # Define allowed extensions for each type of file
-ALLOWED_IMAGE_EXTENSIONS = settings.media.allowed_image_extensions
+# ALLOWED_IMAGE_EXTENSIONS = settings.media.allowed_image_extensions
 
 main_storage_location = settings.media.root[4:]
 
 quiz_storage_location = settings.media.quiz_media[4:]
 
-main_storage = CustomFileSystemStorage(main_storage_location, ALLOWED_IMAGE_EXTENSIONS)  # TODO: Fix Allowed media ext not working, 
-# maybe del all mechanics cause in fact can dens almost all media 
-
-quiz_storage = CustomFileSystemStorage(quiz_storage_location, ALLOWED_IMAGE_EXTENSIONS)
+main_storage = CustomFileSystemStorage(main_storage_location)  # TODO: Fix Allowed media ext not working, 
 
 log.info("Initialized all storage instances")

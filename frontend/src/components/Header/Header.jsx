@@ -1,33 +1,70 @@
 // components/Header/Header.jsx
 
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Header.css';
 
 
-function Header({ selectedModel, availableModels, handleModelChange, isLoading }) {
-    // console.log("Header props:", { selectedModel, availableModels, handleModelChange, isLoading });
-    
+function Header({ selectedModel, availableModels, handleModelChange }) {
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    const currentModel = availableModels.find(model => model.id === selectedModel);
+
+    const toggleDropdown = () => {
+        setIsDropdownOpen((prev) => !prev);
+    };
+
+    const selectModel = (modelId) => {
+        handleModelChange({ target: { value: modelId } });
+        setIsDropdownOpen(false);
+    };
+
+    // Close the dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        if (isDropdownOpen) {
+            document.addEventListener('click', handleClickOutside);
+        } else {
+            document.removeEventListener('click', handleClickOutside);
+        }
+
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [isDropdownOpen]);
+
     return (
-        <header className="app-header">
-            <h1>AI Chat</h1>
-            <div className="model-selector">
-                <label htmlFor="model-select">Model:</label>
-                <select
-                    id="model-select"
-                    value={selectedModel || ''}
-                    onChange={handleModelChange}
-                    disabled={isLoading || availableModels.length === 0}
-                >
-                    {availableModels.length === 0 ? (
-                        <option value="">Loading models...</option>
-                    ) : (
-                        availableModels.map(model => (
-                            <option key={model.id} value={model.id}>
-                                {model.name} (Priority: {model.priority})
-                            </option>
-                        ))
+        <header>
+            <div className="header-container">
+                <h1 className="app-header">AI Chat</h1>
+
+                <div className="model-indicator" onClick={toggleDropdown} ref={dropdownRef}>
+                    <span className="current-model">
+                        {currentModel ? currentModel.name : 'Выберите модель'}
+                    </span>
+                    <span className="dropdown-icon">{isDropdownOpen ? '▴' : '▾'}</span>
+
+                    {isDropdownOpen && (
+                        <div className="model-dropdown">
+                            {availableModels.length === 0 ? (
+                                <div className="model-option disabled">Loading models...</div>
+                            ) : (
+                                availableModels.map(model => (
+                                    <div
+                                        key={model.id}
+                                        className={`model-option ${model.id === selectedModel ? 'selected' : ''}`}
+                                        onClick={() => selectModel(model.id)}
+                                    >
+                                        {model.name}
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     )}
-                </select>
+                </div>
             </div>
         </header>
     );

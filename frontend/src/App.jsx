@@ -10,23 +10,22 @@ import { useChat } from './hooks/useChat';
 import './App.css';
 
 
+// TODO: Add fullscren mode
 function App() {
     const [isTelegramApp, setIsTelegramApp] = useState(false);
     const [tgInitData, setTgInitData] = useState(null);
     const [isInitialized, setIsInitialized] = useState(false);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
 
-    // Initialize Telegram WebApp
+    // Telegram WebApp initialization
     useEffect(() => {
         try {
             const tg = window?.Telegram?.WebApp;
             if (tg && tg.initData && tg.initData.length > 0) {
-                // Only consider it a Telegram WebApp if initData exists
                 tg.ready();
                 setIsTelegramApp(true);
                 setTgInitData(tg.initData);
-                console.log("Telegram WebApp detected and initialized");
             } else {
-                console.warn("Not inside Telegram WebApp environment");
                 setIsTelegramApp(false);
             }
         } catch (error) {
@@ -36,6 +35,25 @@ function App() {
             setIsInitialized(true);
         }
     }, []);
+
+    // TODO: Still got doubds about this keyboard height fix -> doublecheck
+    useEffect(() => {
+        const updateHeight = () => {
+            const viewportHeight = window.visualViewport?.height || window.innerHeight;
+            const fullHeight = document.documentElement.clientHeight;
+            const heightDiff = fullHeight - viewportHeight;
+            setKeyboardHeight(heightDiff > 100 ? Math.min(heightDiff, 100) : 0); // Max limit for height update
+        };
+
+        window.visualViewport?.addEventListener("resize", updateHeight);
+        window.addEventListener("resize", updateHeight);
+
+        return () => {
+            window.visualViewport?.removeEventListener("resize", updateHeight);
+            window.removeEventListener("resize", updateHeight);
+        };
+    }, []);
+
 
     const {
         messages,
@@ -56,16 +74,12 @@ function App() {
         return <div className="loading">Initializing...</div>;
     }
 
-    // Display a warning if not running inside Telegram
     if (!isTelegramApp && isInitialized) {
-        console.log("Showing Telegram Warning");
         return <TelegramWarning />;
     }
 
-    console.log("App state:", { isInitialized, isTelegramApp });
-
     return (
-        <div className="app-container">
+        <div className="app-container" style={{ paddingBottom: keyboardHeight }}>
             <Header
                 selectedModel={selectedModel}
                 availableModels={availableModels}

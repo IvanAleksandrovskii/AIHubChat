@@ -1,28 +1,27 @@
-# Этап сборки
 FROM node:18-alpine as build
 
 WORKDIR /app
 
-# Копируем файлы package.json и package-lock.json
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Копируем исходный код
+# Copy the source code
 COPY . .
 
-# Собираем приложение
+# Build the application
 RUN npm run build
 
-# Этап продакшена
+# Production type build
 FROM nginx:alpine
 
-# Копируем конфигурацию nginx
+# Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Копируем собранное приложение
+# Copy built application
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Открываем порт 5173
+# Expose port
 EXPOSE 5173
 
-# Запускаем nginx
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

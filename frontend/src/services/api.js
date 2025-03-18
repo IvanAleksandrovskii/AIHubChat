@@ -3,7 +3,7 @@
 import axios from 'axios';
 
 // const API_BASE_URL = 'http://localhost:8000/api';
-const API_BASE_URL = 'https://jy3dlw-ip-184-22-34-53.tunnelmole.net/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://example.com';
 
 // Helper function to configure headers with Telegram initData
 const configureHeaders = (initData) => {
