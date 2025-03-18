@@ -4,3 +4,4 @@
 .vscode/
 .idea/
 **/__unused__/
+nginx.conf/
