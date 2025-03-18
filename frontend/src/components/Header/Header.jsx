@@ -5,6 +5,8 @@ import './Header.css';
 
 
 function Header({ selectedModel, availableModels, handleModelChange, isLoading }) {
+    // console.log("Header props:", { selectedModel, availableModels, handleModelChange, isLoading });
+    
     return (
         <header className="app-header">
             <h1>AI Chat</h1>

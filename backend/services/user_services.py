@@ -10,8 +10,8 @@ from core.models import User, db_helper
 
 # TODO: Implement caching for user service and others
 class UserService:
-    @staticmethod
-    async def create_user(chat_id: int, username: str | None) -> User:
+    @classmethod
+    async def create_user(cls, chat_id: int, username: str | None) -> User:
         async with db_helper.db_session() as session:
             try:
                 # Check if user exists
@@ -21,6 +21,11 @@ class UserService:
                 existing_user = result.scalar_one_or_none()
 
                 if existing_user:
+                    if existing_user.username != username:
+                        log.info("User %s already exists with different username", chat_id)
+                        
+                        updated_user = await cls.update_username(chat_id, username)
+                        return updated_user
                     log.info("User %s already exists", chat_id)
                     return existing_user
 
@@ -55,7 +60,7 @@ class UserService:
                 log.exception(f"Error in get_all_users: {e}")
 
     @staticmethod
-    async def update_username(chat_id: int, new_username: str | None) -> bool:
+    async def update_username(chat_id: int, new_username: str | None) -> User | None:
         async with db_helper.db_session() as session:
             try:
                 user = await session.execute(
@@ -70,14 +75,16 @@ class UserService:
                     )
 
                     # TODO: clear cache for updated user
+                    user = await session.refresh(user)
+                    return user
 
                 else:
                     log.warning(f"User {chat_id} not found for username update")
-                    return False
+                    return None
             except Exception as e:
                 log.exception(f"Error in update_username: {e}")
                 await session.rollback()
-                return False
+                return None
 
     """
     Example if is_superuser is implemented to the User model
