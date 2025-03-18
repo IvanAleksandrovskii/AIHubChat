@@ -4,6 +4,7 @@ import React from 'react';
 import './TelegramWarning.css';
 
 
+// TODO: Make it have a link to the bot/app
 const TelegramWarning = () => {
     return (
         <div className="telegram-warning">

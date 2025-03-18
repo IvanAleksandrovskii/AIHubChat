@@ -130,4 +130,5 @@ if __name__ == "__main__":
         reload=settings.run.debug,
         forwarded_allow_ips="*",  # Added this for htts fix
         proxy_headers=True,
+        workers=settings.run.workers,
     )
