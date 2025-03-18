@@ -19,16 +19,14 @@ function App() {
     useEffect(() => {
         try {
             const tg = window?.Telegram?.WebApp;
-
-            if (tg) {
+            if (tg && tg.initData && tg.initData.length > 0) {
+                // Only consider it a Telegram WebApp if initData exists
                 tg.ready();
                 setIsTelegramApp(true);
                 setTgInitData(tg.initData);
-
-                // Can also add theme detection similar to your example
-                // const isDarkMode = tg.colorScheme === 'dark';
+                console.log("Telegram WebApp detected and initialized");
             } else {
-                console.warn("Telegram Web App not detected.");
+                console.warn("Not inside Telegram WebApp environment");
                 setIsTelegramApp(false);
             }
         } catch (error) {
@@ -59,9 +57,12 @@ function App() {
     }
 
     // Display a warning if not running inside Telegram
-    if (!isTelegramApp) {
+    if (!isTelegramApp && isInitialized) {
+        console.log("Showing Telegram Warning");
         return <TelegramWarning />;
     }
+
+    console.log("App state:", { isInitialized, isTelegramApp });
 
     return (
         <div className="app-container">
